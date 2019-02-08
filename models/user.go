@@ -1,6 +1,9 @@
 package models
 
-import "github.com/jeffveleze/gu_mvc/db"
+import (
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/jeffveleze/gu_mvc/db"
+)
 
 type User struct {
 	Id          int     `json:id`
@@ -15,13 +18,25 @@ type UserModel struct {
 	dbClient db.DbClient
 }
 
-func NewUserModel(db db.DbClient) UserModel {
-	return UserModel{db}
+func NewUserModel(db *db.DbClient) *UserModel {
+	return &UserModel{*db}
 }
 
-func (model UserModel) GetUserByID(id int) User {
-	username := model.dbClient.GetUserByID(id)
-	return User{Id: 1, Name: username}
+func (model UserModel) GetUserByID(userID int) User {
+
+	stmtOut, err := model.dbClient.Database.Prepare("SELECT * FROM users WHERE id = ?")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	var user User
+
+	err = stmtOut.QueryRow(userID).Scan(&user.Id, &user.Name, &user.Email, &user.CreatedDate, &user.Password, &user.Token)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return user
 }
 
 func (m UserModel) GetAllUsers() []User {

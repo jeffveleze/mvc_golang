@@ -36,10 +36,10 @@ var routes = Routes{
 	},
 }
 
-func NewRouter(dbClient db.DbClient) *mux.Router {
+func NewRouter(dbClient *db.DbClient) *mux.Router {
 
-	userModel = models.NewUserModel(dbClient)
-	userController = controllers.NewUserController(userModel)
+	userModel = *models.NewUserModel(dbClient)
+	userController = *controllers.NewUserController(&userModel)
 
 	router := mux.NewRouter().StrictSlash(true)
 	for _, route := range routes {

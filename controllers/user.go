@@ -12,8 +12,8 @@ type UserController struct {
 	userModel models.UserModel
 }
 
-func NewUserController(userModel models.UserModel) UserController {
-	return UserController{userModel: userModel}
+func NewUserController(userModel *models.UserModel) *UserController {
+	return &UserController{userModel: *userModel}
 }
 
 func (c UserController) GetUserByID(w http.ResponseWriter, r *http.Request) {
