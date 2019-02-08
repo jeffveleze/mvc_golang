@@ -5,6 +5,12 @@ import (
 	"github.com/jeffveleze/gu_mvc/db"
 )
 
+var dbDriver = "mysql"
+var dbName = "gu_dev"
+var dbUser = "root"
+var dbPassword = "Jefferson034"
+var dbCreds = dbUser + ":" + dbPassword + "@/" + dbName
+
 type User struct {
 	Id          int     `json:id`
 	Name        string  `json:"name"`
@@ -23,6 +29,12 @@ func NewUserModel(db *db.DbClient) *UserModel {
 }
 
 func (model UserModel) GetUserByID(userID int) User {
+
+	// db, err := sql.Open(dbDriver, dbCreds)
+	// if err != nil {
+	// 	panic(err.Error())
+	// }
+	// stmtOut, err := db.Prepare("SELECT * FROM users WHERE id = ?")
 
 	stmtOut, err := model.dbClient.Database.Prepare("SELECT * FROM users WHERE id = ?")
 	if err != nil {
