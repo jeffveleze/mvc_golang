@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/jeffveleze/gu_mvc/entities"
 	"github.com/jeffveleze/gu_mvc/models"
 )
 
@@ -42,7 +43,7 @@ func (c UserController) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c UserController) NewUser(w http.ResponseWriter, r *http.Request) {
-	var user models.User
+	var user entities.User
 
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
@@ -104,7 +105,7 @@ func (c UserController) IsAuthorized(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c UserController) Login(w http.ResponseWriter, r *http.Request) {
-	var user models.User
+	var user entities.User
 
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
@@ -114,7 +115,7 @@ func (c UserController) Login(w http.ResponseWriter, r *http.Request) {
 	authorizedUser, err := c.userModel.IsAuthorized(user)
 
 	if err != nil {
-		queryResult := models.QueryResult{Status: "No authorized user"}
+		queryResult := entities.QueryResult{Status: "No authorized user"}
 
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -135,7 +136,7 @@ func (c UserController) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c UserController) CreateToken(w http.ResponseWriter, r *http.Request) {
-	var user models.User
+	var user entities.User
 
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
@@ -144,7 +145,7 @@ func (c UserController) CreateToken(w http.ResponseWriter, r *http.Request) {
 
 	jwtToken, err := c.userModel.CreateToken(user)
 	if err != nil {
-		queryResult := models.QueryResult{Status: "Couldn't create token"}
+		queryResult := entities.QueryResult{Status: "Couldn't create token"}
 
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(http.StatusUnprocessableEntity)

@@ -7,23 +7,8 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jeffveleze/gu_mvc/db"
+	"github.com/jeffveleze/gu_mvc/entities"
 )
-
-var dbDriver = "mysql"
-var dbName = "gu_dev"
-var dbUser = "root"
-var dbPassword = "Jefferson034"
-var dbCreds = dbUser + ":" + dbPassword + "@/" + dbName
-var secretPassword = "secret"
-
-type User struct {
-	Id          int     `json:id`
-	Name        string  `json:"name"`
-	Email       string  `json:"email"`
-	CreatedDate []uint8 `json:"created_date"`
-	Password    string  `json:"password"`
-	Token       string  `json:token`
-}
 
 type UserModel struct {
 	dbClient *db.DbClient
@@ -35,7 +20,7 @@ func NewUserModel(db *db.DbClient) *UserModel {
 	}
 }
 
-func (m UserModel) GetUserByID(userID int) User {
+func (m UserModel) GetUserByID(userID int) entities.User {
 
 	stmtOut, err := m.dbClient.Database.Prepare("SELECT * FROM users WHERE id = ?")
 	if err != nil {
@@ -43,7 +28,7 @@ func (m UserModel) GetUserByID(userID int) User {
 	}
 	defer stmtOut.Close()
 
-	var user User
+	var user entities.User
 
 	err = stmtOut.QueryRow(userID).Scan(&user.Id, &user.Name, &user.Email, &user.CreatedDate, &user.Password, &user.Token)
 	if err != nil {
@@ -53,7 +38,7 @@ func (m UserModel) GetUserByID(userID int) User {
 	return user
 }
 
-func (m UserModel) GetAllUsers() []User {
+func (m UserModel) GetAllUsers() []entities.User {
 
 	rows, err := m.dbClient.Database.Query("SELECT * FROM users")
 	if err != nil {
@@ -71,7 +56,7 @@ func (m UserModel) GetAllUsers() []User {
 		scanArgs[i] = &values[i]
 	}
 
-	var users []User
+	var users []entities.User
 
 	for rows.Next() {
 		err = rows.Scan(scanArgs...)
@@ -79,7 +64,7 @@ func (m UserModel) GetAllUsers() []User {
 			panic(err.Error())
 		}
 
-		var user User
+		var user entities.User
 
 		user.Id, err = strconv.Atoi(string(values[0]))
 		user.Name = string(values[1])
@@ -98,7 +83,7 @@ func (m UserModel) GetAllUsers() []User {
 	return users
 }
 
-func (m UserModel) CreateNewUser(user User) User {
+func (m UserModel) CreateNewUser(user entities.User) entities.User {
 
 	stmtIns, err := m.dbClient.Database.Prepare("INSERT INTO users (name, email, password, token) VALUES(?,?,?,?)")
 	if err != nil {
@@ -117,7 +102,7 @@ func (m UserModel) CreateNewUser(user User) User {
 		panic(err.Error())
 	}
 
-	var userCreated User
+	var userCreated entities.User
 
 	err = stmtOut.QueryRow().Scan(&userCreated.Id, &userCreated.Name, &userCreated.Email, &userCreated.CreatedDate, &userCreated.Password, &userCreated.Token)
 	if err != nil {
@@ -127,7 +112,7 @@ func (m UserModel) CreateNewUser(user User) User {
 	return userCreated
 }
 
-func (m UserModel) DeleteUser(userID int) QueryResult {
+func (m UserModel) DeleteUser(userID int) entities.QueryResult {
 
 	stmtDel, err := m.dbClient.Database.Prepare("DELETE FROM users WHERE id = ?")
 	if err != nil {
@@ -140,12 +125,12 @@ func (m UserModel) DeleteUser(userID int) QueryResult {
 		panic(err.Error())
 	}
 
-	queryResult := QueryResult{Status: "Query excecuted without errors"}
+	queryResult := entities.QueryResult{Status: "Query excecuted without errors"}
 
 	return queryResult
 }
 
-func (m UserModel) IsAuthorized(user User) (User, error) {
+func (m UserModel) IsAuthorized(user entities.User) (entities.User, error) {
 
 	stmtOut, err := m.dbClient.Database.Prepare("SELECT * FROM users WHERE email = ? AND password = ?")
 	if err != nil {
@@ -153,27 +138,27 @@ func (m UserModel) IsAuthorized(user User) (User, error) {
 	}
 	defer stmtOut.Close()
 
-	var dbUser User
+	var dbUser entities.User
 	err = stmtOut.QueryRow(user.Email, user.Password).Scan(&dbUser.Id, &dbUser.Name, &dbUser.Email, &dbUser.CreatedDate, &dbUser.Password, &dbUser.Token)
 
 	return dbUser, err
 }
 
-func (m UserModel) CreateToken(user User) (JwtToken, error) {
+func (m UserModel) CreateToken(user entities.User) (entities.JwtToken, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"name":     user.Name,
 		"password": user.Password,
 	})
 
-	tokenString, err := token.SignedString([]byte(secretPassword))
+	tokenString, err := token.SignedString([]byte(entities.SecretPassword))
 
-	jwtToken := JwtToken{Token: tokenString}
+	jwtToken := entities.JwtToken{Token: tokenString}
 
 	return jwtToken, err
 }
 
-func (m UserModel) UpdateToken(jwtToken JwtToken, user User) error {
+func (m UserModel) UpdateToken(jwtToken entities.JwtToken, user entities.User) error {
 
 	stmtUpd, err := m.dbClient.Database.Prepare("UPDATE users SET token = ? WHERE id = ?")
 	if err != nil {
