@@ -11,9 +11,9 @@ func main() {
 
 	dbClient := db.NewDbClient()
 
-	router := NewRouter(dbClient)
+	defer dbClient.Database.Close()
 
-	// defer dbClient.Database.Close()
+	router := NewRouter(dbClient)
 
 	log.Fatal(http.ListenAndServe(":8080", router))
 }

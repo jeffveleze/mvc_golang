@@ -18,31 +18,53 @@ type Route struct {
 
 type Routes []Route
 
-var userModel models.UserModel
-var userController controllers.UserController
-
-var routes = Routes{
-	Route{
-		"home",
-		"GET",
-		"/users",
-		userController.GetUserByID,
-	},
-	Route{
-		"home",
-		"GET",
-		"/users/all",
-		userController.GetAllUsers,
-	},
+func buildRoutes(userController *controllers.UserController) *Routes {
+	return &Routes{
+		Route{
+			"home",
+			"GET",
+			"/users",
+			userController.GetUserByID,
+		},
+		Route{
+			"home",
+			"GET",
+			"/users/all",
+			userController.GetAllUsers,
+		},
+		Route{
+			"newUser",
+			"POST",
+			"/users/new",
+			userController.NewUser,
+		},
+		Route{
+			"deleteUser",
+			"DELETE",
+			"/users",
+			userController.DeleteUser,
+		},
+		Route{
+			"login",
+			"POST",
+			"/users/login",
+			userController.Login,
+		},
+		Route{
+			"login",
+			"POST",
+			"/users/create-token",
+			userController.CreateToken,
+		},
+	}
 }
 
 func NewRouter(dbClient *db.DbClient) *mux.Router {
 
-	userModel = *models.NewUserModel(dbClient)
-	userController = *controllers.NewUserController(&userModel)
+	routes := buildRoutes(controllers.NewUserController(models.NewUserModel(dbClient)))
 
 	router := mux.NewRouter().StrictSlash(true)
-	for _, route := range routes {
+	for _, route := range *routes {
 		router.
 			Methods(route.Method).
 			Path(route.Pattern).
